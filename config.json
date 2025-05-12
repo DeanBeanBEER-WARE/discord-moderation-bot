@@ -1,0 +1,54 @@
+{
+    "bot_prefix": "!",
+    "log_channel_id": 1340622750317940736,
+    "moderation_actions": {
+        "actions_for_result": {
+            "[INSULT]": ["delete_message", "log_action", "warn_user_eph_public"],
+            "[SPAM]": ["delete_message", "log_action", "warn_user_eph_public", "timeout_user_short"],
+            "[WARNING]": ["log_action", "warn_user_eph_public"],
+            "[LINK]": ["log_action"],
+            "[EXCESSIVE CAPS]": ["log_action", "warn_user_eph_public"],
+            "[OK]": ["log_action"]
+        },
+        "custom_actions_for_result": {
+            "[FUNNY]": ["warn_user_eph_public"],
+            "[HACKER]": ["delete_all_messages_in_channel", "log_action", "warn_user_eph_public"]
+        }
+    },
+    "moderation_rules": {
+        "active_modules": {
+            "profanity_filter": true,
+            "spam_filter": true,
+            "excessive_caps_filter": true,
+            "suspicious_link_filter": true 
+        },
+        "timeout_durations": {
+            "short": 60,
+            "medium": 300,
+            "long": 3600
+        },
+        "default_warn_language": "en" 
+    },
+    "gpt_settings": {
+        "model": "gpt-4.1-nano",
+        "temperature": 1.0,
+        "max_tokens": 4048,
+        "max_tokens_lang_detect": 10,
+        "max_tokens_translate": 300
+    },
+    "membership_moderation_leniency": {
+        "enabled": false,
+        "default_leniency_level": 0,
+        "max_leniency_at_days": 365,
+        "insult_deletion_threshold": 70,
+        "max_leniency_level": 100
+    },
+    "custom_rules_prompt": {
+        "enabled": true,
+        "exclusive": true,
+        "prompt": [
+            "nachrichten im 'allgemein' channel werden immer als [HACKER] gewertet",
+            "nachrichten im 'ankündigungen' channel werden immer als [HACKER] gewertet"
+        ]
+    }
+}
