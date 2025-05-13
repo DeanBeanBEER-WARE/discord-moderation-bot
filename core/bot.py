@@ -8,6 +8,7 @@ from .gpt_integration import analyze_text_with_gpt
 from .moderation import handle_moderation_action
 from . import prompts
 from utils.config_loader import CUSTOM_RULES_PROMPT_CONFIG, MAX_LENIENCY_LEVEL
+import asyncio
 
 bot_logger = get_logger(__name__)
 LOG_CHANNEL_ID = config_loader.get_config("log_channel_id")
@@ -148,20 +149,58 @@ async def on_message(message: discord.Message):
         analysis_result = None
         system_prompt_to_use = None
 
+        # NEU: Kontext der letzten 5 Nachrichten sammeln
+        recent_messages_context = ""
+        if hasattr(message.channel, 'history'):
+            try:
+                messages = []
+                async for msg in message.channel.history(limit=5, oldest_first=True):
+                    # Format: [username]: message
+                    messages.append(f"[{msg.author.display_name}]: {msg.content}")
+                recent_messages_context = "\n".join(messages)
+            except Exception as e:
+                bot_logger.warning(f"Could not fetch recent messages for context: {e}")
+                recent_messages_context = "(context unavailable)"
+        else:
+            recent_messages_context = "(context unavailable)"
+
         if CUSTOM_RULES_PROMPT_CONFIG.get("enabled") and _user_custom_rule_text_loaded:
             is_exclusive = CUSTOM_RULES_PROMPT_CONFIG.get("exclusive", False)
+            casual_language_friendly = CUSTOM_RULES_PROMPT_CONFIG.get("casual_language_friendly", False)
             channel_name_for_prompt = message.channel.name if hasattr(message.channel, 'name') else str(message.channel)
-            
             current_template_string = None
             format_args = {}
 
+            # Dynamischer Zusatz für Umgangssprache
+            casual_language_block = ""
+            if casual_language_friendly:
+                casual_language_block = (
+                    "When evaluating if a message is an insult or offensive, you MUST distinguish between genuinely offensive, personal attacks and friendly, colloquial, or playful language (banter, jokes, or teasing) that is common in some communities. "
+                    "If the recent message context suggests a friendly or humorous tone, do NOT flag such language as an insult. "
+                    "Always consider the recent message context to help you decide if the language is meant as a joke or as a real attack. "
+                    "If you are unsure, prefer [OK] over [INSULT].\n"
+                )
+
             if is_exclusive:
-                current_template_string = prompts.EXCLUSIVE_CUSTOM_RULES_TEMPLATE
+                # Prompt dynamisch zusammensetzen
+                base_template = prompts.EXCLUSIVE_CUSTOM_RULES_TEMPLATE
+                # Entferne ggf. alten Block, falls vorhanden (für Robustheit)
+                base_template = base_template.replace(
+                    "When evaluating if a message is an insult or offensive, you MUST distinguish between genuinely offensive, personal attacks and friendly, colloquial, or playful language (banter, jokes, or teasing) that is common in some communities. If the recent message context suggests a friendly or humorous tone, do NOT flag such language as an insult. Always consider the recent message context to help you decide if the language is meant as a joke or as a real attack. If you are unsure, prefer [OK] over [INSULT].\n",
+                    ""
+                )
+                # Füge Block ggf. ein
+                base_template = base_template.replace(
+                    "---\n",
+                    f"---\n{casual_language_block}"
+                )
+                current_template_string = base_template
                 format_args = {
                     "user_custom_rule_text": _user_custom_rule_text_loaded,
                     "channel_name_placeholder": channel_name_for_prompt,
                     "leniency_level": current_leniency_level,
-                    "exclusive_response_categories": _exclusive_response_categories_loaded
+                    "exclusive_response_categories": _exclusive_response_categories_loaded,
+                    "recent_messages_context": recent_messages_context
                 }
             else:
                 current_template_string = prompts.NON_EXCLUSIVE_CUSTOM_RULES_TEMPLATE
