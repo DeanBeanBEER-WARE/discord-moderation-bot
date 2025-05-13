@@ -14,4 +14,7 @@ __pycache__/
 .DS_Store
 
 # Log files
-*.log 
+*.log
+
+# Config files
+config.json 
