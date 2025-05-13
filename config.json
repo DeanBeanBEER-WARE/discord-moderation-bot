@@ -47,8 +47,8 @@
         "enabled": true,
         "exclusive": true,
         "prompt": [
-            "nachrichten im 'allgemein' channel werden immer als [HACKER] gewertet",
-            "nachrichten im 'ankündigungen' channel werden immer als [HACKER] gewertet"
+            "beleidigungen im channel 'allgemein' werden immer als [INSULT] gewertet",
+            "beleidigungen im channel 'ankündigungen' werden immer als [OK] gewertet"
         ]
     }
 }
