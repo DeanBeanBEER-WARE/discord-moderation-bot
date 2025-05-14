@@ -3,16 +3,16 @@
     "log_channel_id": 1340622750317940736,
     "moderation_actions": {
         "actions_for_result": {
-            "[INSULT]": ["delete_message", "log_action", "warn_user_eph_public"],
-            "[SPAM]": ["delete_message", "log_action", "warn_user_eph_public", "timeout_user_short"],
-            "[WARNING]": ["log_action", "warn_user_eph_public"],
+            "[INSULT]": ["delete_message", "log_action", "send_dm_warning"],
+            "[SPAM]": ["delete_message", "log_action", "send_dm_warning", "timeout_user_short"],
+            "[WARNING]": ["log_action", "send_dm_warning"],
             "[LINK]": ["log_action"],
-            "[EXCESSIVE CAPS]": ["log_action", "warn_user_eph_public"],
+            "[EXCESSIVE CAPS]": ["log_action", "send_dm_warning"],
             "[OK]": ["log_action"]
         },
         "custom_actions_for_result": {
-            "[FUNNY]": ["warn_user_eph_public"],
-            "[HACKER]": ["delete_all_messages_in_channel", "log_action", "warn_user_eph_public"]
+            "[FUNNY]": ["send_dm_warning"],
+            "[HACKER]": ["delete_all_messages_in_channel", "log_action", "send_dm_warning"]
         }
     },
     "moderation_rules": {

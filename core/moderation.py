@@ -194,6 +194,15 @@ async def handle_moderation_action(client: discord.Client, message: discord.Mess
                 msg = f"delete_all_messages_in_channel: Channel {getattr(message.channel, 'name', str(message.channel))} unterstützt keine history()."
                 performed_actions_summary.append(msg)
                 mod_logger.warning(msg)
+        elif action == "send_dm_warning":
+            try:
+                user_to_warn = message.author
+                gpt_flag_en = normalized_gpt_result
+                result = await moderation_actions.send_dm_warning(user_to_warn, message, gpt_flag_en, DEFAULT_WARN_LANGUAGE)
+                performed_actions_summary.append(result)
+            except Exception as e:
+                mod_logger.error(f"Error sending DM warning to {message.author}: {e}.")
+                performed_actions_summary.append(f"Failed to send DM warning (Exception: {e})")
         else:
             mod_logger.warning(f"Unbekannte Moderationsaktion: {action}")
             performed_actions_summary.append(f"Unknown action: {action}")
