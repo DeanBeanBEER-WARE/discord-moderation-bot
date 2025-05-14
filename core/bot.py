@@ -16,6 +16,7 @@ LENIENCY_CONFIG = config_loader.get_config("membership_moderation_leniency", {})
 LENIENCY_ENABLED = LENIENCY_CONFIG.get("enabled", False)
 DEFAULT_LENIENCY_LEVEL = LENIENCY_CONFIG.get("default_leniency_level", 0)
 MAX_LENIENCY_AT_DAYS = LENIENCY_CONFIG.get("max_leniency_at_days", 365)
+CONTEXT_MESSAGE_COUNT = config_loader.get_config("context_message_count", 5)
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -149,12 +150,12 @@ async def on_message(message: discord.Message):
         analysis_result = None
         system_prompt_to_use = None
 
-        # NEU: Kontext der letzten 5 Nachrichten sammeln
+        # NEU: Kontext der letzten X Nachrichten sammeln (dynamisch)
         recent_messages_context = ""
         if hasattr(message.channel, 'history'):
             try:
                 messages = []
-                async for msg in message.channel.history(limit=5, oldest_first=True):
+                async for msg in message.channel.history(limit=CONTEXT_MESSAGE_COUNT, oldest_first=True):
                     # Format: [username]: message
                     messages.append(f"[{msg.author.display_name}]: {msg.content}")
                 recent_messages_context = "\n".join(messages)
@@ -200,7 +201,8 @@ async def on_message(message: discord.Message):
                     "channel_name_placeholder": channel_name_for_prompt,
                     "leniency_level": current_leniency_level,
                     "exclusive_response_categories": _exclusive_response_categories_loaded,
-                    "recent_messages_context": recent_messages_context
+                    "recent_messages_context": recent_messages_context,
+                    "context_message_count": CONTEXT_MESSAGE_COUNT
                 }
             else:
                 current_template_string = prompts.NON_EXCLUSIVE_CUSTOM_RULES_TEMPLATE
