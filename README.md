@@ -148,13 +148,17 @@ These are the built-in flags that the bot can assign to messages (as detected by
 These actions can be mapped to flags in the configuration:
 
 - `delete_message` – Deletes the offending message
-- `warn_user_eph_public` – Sends a warning to the user via DM (translated if possible)
+- `send_dm_warning` – Sends a warning to the user via DM (translated if possible)
 - `timeout_user_short` / `timeout_user_medium` / `timeout_user_long` – Temporarily mutes the user for a configurable duration
 - `timeout_user` – Temporarily mutes the user for the default short duration
 - `log_action` – Logs the moderation event as an embed in the configured log channel
 - `delete_all_messages_in_channel` – Deletes all messages in the affected channel (up to a limit, default 100)
 
 > **Note:** Custom flags and actions can be defined in the configuration, but only the above are considered standard and are always available.
+
+### Context Message Count
+
+- The number of context messages sent to GPT for evaluation can be configured via the `context_message_count` variable in `config.json`.
 
 ---
 
