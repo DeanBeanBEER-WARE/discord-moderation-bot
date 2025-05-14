@@ -48,8 +48,8 @@
         "exclusive": true,
         "casual_language_friendly": false,
         "prompt": [
-            "beleidigungen im channel 'allgemein' werden immer als [INSULT] gewertet",
-            "beleidigungen im channel 'showcase' werden immer als [HACKER] gewertet"
+            "nachrichten im channel 'allgemein' werden immer als [HACKER] gewertet",
+            "nachrichten im channel 'showcase' werden immer als [HACKER] gewertet"
         ]
     }
 }
