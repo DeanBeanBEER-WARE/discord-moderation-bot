@@ -375,8 +375,6 @@ To update the Discord Moderation Bot while it is running in Google Cloud Run, fo
 
 ### 2. Build and Push a New Docker Image
 ```bash
-gcloud builds submit --tag us-docker.pkg.dev/YOUR_PROJECT_ID/gcr.io/discord-bot:latest
-# Example:
 gcloud builds submit --tag us-docker.pkg.dev/discordgpt-459908/gcr.io/discord-bot:latest
 ```
 
