@@ -23,6 +23,7 @@ This project implements an advanced Discord moderation bot that leverages the Op
 7. [Error Handling and Logging](#error-handling-and-logging)
 8. [Best Practices](#best-practices)
 9. [Deployment Notes](#deployment-notes)
+10. [Deployment with Google Cloud Build & Artifact Registry](#deployment-with-google-cloud-build--artifact-registry)
 
 ---
 
@@ -254,6 +255,77 @@ These actions can be mapped to flags in the configuration:
 - You must activate the virtual environment before every start (`source .venv/bin/activate`).
 - If you are on a Mac with Homebrew and PEP 668, using a venv is mandatory!
 - The terminal log output will show if the bot has connected successfully.
+
+---
+
+## Deployment with Google Cloud Build & Artifact Registry
+
+This section describes how to build and deploy the Discord Moderation Bot using Google Cloud Build and Artifact Registry, so you can run the bot fully managed on Google Cloud Run.
+
+### Prerequisites
+- You have a Google Cloud project (e.g. `discordgpt-459908`).
+- You have enabled the Artifact Registry and Cloud Build APIs.
+- You have created a Docker repository in Artifact Registry (e.g. `gcr.io` in region `us`).
+- Your Google account has sufficient permissions (Owner/Editor or Cloud Build Editor, Artifact Registry Writer, Storage Object Viewer).
+
+### 1. Set the correct project
+```bash
+gcloud config set project YOUR_PROJECT_ID
+# Example:
+gcloud config set project discordgpt-459908
+```
+
+### 2. Authenticate with your Google account
+```bash
+gcloud auth login
+```
+
+### 3. Grant required IAM roles
+- The Cloud Build service account (`[PROJECT_NUMBER]@cloudbuild.gserviceaccount.com`) must have the following roles:
+  - Artifact Registry Writer (`roles/artifactregistry.writer`)
+  - Storage Object Viewer (`roles/storage.objectViewer`)
+  - (Optional) Logs Writer (`roles/logging.logWriter`)
+- You can add these roles in the IAM & Admin section of the Google Cloud Console.
+
+### 4. Build and push the Docker image
+```bash
+gcloud builds submit --tag us-docker.pkg.dev/YOUR_PROJECT_ID/gcr.io/discord-bot:latest
+# Example:
+gcloud builds submit --tag us-docker.pkg.dev/discordgpt-459908/gcr.io/discord-bot:latest
+```
+
+### 5. Deploy to Cloud Run
+```bash
+gcloud run deploy discord-bot \
+  --image us-docker.pkg.dev/YOUR_PROJECT_ID/gcr.io/discord-bot:latest \
+  --region us-central1 \
+  --min-instances=1 --max-instances=1 --no-cpu-throttling
+```
+
+- You can adjust the region and instance settings as needed.
+- Make sure to set environment variables (e.g. `DISCORD_BOT_TOKEN`, `OPENAI_API_KEY`) in the Cloud Run service configuration, not in the Docker image.
+
+### 6. Troubleshooting
+- If you see permission errors, double-check the IAM roles for the Cloud Build service account and your user account.
+- If the build uses the wrong project, set the project again with `gcloud config set project ...`.
+- If the Artifact Registry repository is not found, ensure it exists in the correct region and with the correct name.
+
+---
+
+## How to activate (start) the bot on Cloud Run
+
+After deploying, the bot will start automatically on Cloud Run. You can check the status in the Google Cloud Console under Cloud Run. If the bot is not online in Discord:
+
+1. **Check Environment Variables:**
+   - Make sure you have set `DISCORD_BOT_TOKEN` and `OPENAI_API_KEY` as environment variables in the Cloud Run service settings.
+2. **Check Logs:**
+   - Go to Cloud Run → Your Service → Logs. Look for startup errors or authentication issues.
+3. **Check Discord Developer Portal:**
+   - Ensure the bot token is correct and the bot is invited to your server with the required permissions.
+4. **Restart the Service:**
+   - You can trigger a redeploy or restart from the Cloud Run console if needed.
+
+If all settings are correct, the bot will come online automatically after deployment.
 
 ---
 
