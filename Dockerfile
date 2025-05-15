@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Restlichen Code kopieren
+# Restlichen Code kopieren (inkl. config.json, core/, utils/ etc.)
 COPY . .
 
 # Startbefehl

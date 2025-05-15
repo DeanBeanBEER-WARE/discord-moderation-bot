@@ -1,37 +1,26 @@
-"""Loads configuration (tokens, settings) from .env and config.json."""
+"""Loads configuration (tokens, settings) from environment variables and config.json (as fallback for settings)."""
 import os
 import json
-from dotenv import load_dotenv
 from utils.logger import get_logger
 
 config_logger = get_logger(__name__)
 
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
-if os.path.exists(env_path):
-    load_dotenv(dotenv_path=env_path)
-    config_logger.info(f".env file loaded from: {env_path}")
-else:
-    if load_dotenv():
-         config_logger.info(f".env file loaded using default search paths.")
-    else:
-        config_logger.warning(f"No .env file found (neither at {env_path} nor via default search). Tokens might be missing.")
-
-
-DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# --- Secrets: ALWAYS from environment variables (Cloud Run best practice) ---
+DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 if not DISCORD_BOT_TOKEN:
-    config_logger.error("DISCORD_BOT_TOKEN not found in .env!")
+    config_logger.error("DISCORD_BOT_TOKEN not found in environment variables!")
 if not OPENAI_API_KEY:
-    config_logger.error("OPENAI_API_KEY not found in .env!")
+    config_logger.error("OPENAI_API_KEY not found in environment variables!")
 
+# --- Settings: Try environment variable first, then config.json ---
 CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CONFIG_DIR)
 CONFIG_FILE_PATH = os.path.join(PROJECT_ROOT, "config.json")
 config_logger.info(f"Expected path for config.json: {CONFIG_FILE_PATH}")
 
 config_data = {}
-
 try:
     with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as f:
         config_data = json.load(f)
@@ -45,9 +34,15 @@ except Exception as e:
 
 def get_config(key_path: str, default=None):
     """
-    Allows access to nested configuration values using a path (e.g., "moderation_rules.timeout_durations.short").
-    Returns a default value if the key does not exist.
+    Access nested config values using a path (e.g., "moderation_rules.timeout_durations.short").
+    Tries environment variable first (uppercased, underscores), then config.json, then default.
     """
+    # Try environment variable first
+    env_key = key_path.upper().replace('.', '_')
+    env_value = os.environ.get(env_key)
+    if env_value is not None:
+        return env_value
+    # Fallback: config.json
     keys = key_path.split('.')
     value = config_data
     try:

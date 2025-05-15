@@ -1,4 +1,17 @@
-# Entry point for the Discord bot
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+def run_dummy_server():
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"OK")
+    server = HTTPServer(("", 8080), Handler)
+    server.serve_forever()
+
+threading.Thread(target=run_dummy_server, daemon=True).start()
+
 import asyncio
 from core.bot import start_bot
 

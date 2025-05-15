@@ -24,6 +24,7 @@ This project implements an advanced Discord moderation bot that leverages the Op
 8. [Best Practices](#best-practices)
 9. [Deployment Notes](#deployment-notes)
 10. [Deployment with Google Cloud Build & Artifact Registry](#deployment-with-google-cloud-build--artifact-registry)
+11. [Updating the Bot on Cloud Run](#updating-the-bot-on-cloud-run)
 
 ---
 
@@ -329,4 +330,75 @@ If all settings are correct, the bot will come online automatically after deploy
 
 ---
 
-**This documentation provides a complete overview for developers and maintainers to understand, extend, and operate the Discord Moderation Bot.** 
+## Cloud-Native Configuration (Config Loader)
+
+**As of the latest version, the configuration system is fully cloud-native and optimized for Google Cloud Run:**
+
+- **Secrets (e.g. `DISCORD_BOT_TOKEN`, `OPENAI_API_KEY`) are always loaded from environment variables.**
+  - These must be set in the Cloud Run service configuration, either directly as environment variables or via Secret Manager references.
+  - The `.env` file is ignored in the container and should not be used for production deployments.
+- **Settings (e.g. moderation rules, bot prefix, GPT settings) are loaded from `config.json`.**
+  - You can override any setting by providing an environment variable with the same name (uppercase, underscores, e.g. `BOT_PREFIX`).
+- **Fallback order:**
+  1. Environment variable (if set)
+  2. Value from `config.json`
+  3. Default value (if neither is set)
+
+### How to set secrets in Cloud Run
+
+1. Go to Google Cloud Console → Cloud Run → Your Service → Edit & Deploy New Revision.
+2. Scroll to **Environment Variables**.
+3. Add the following variables (or reference them from Secret Manager):
+   - `DISCORD_BOT_TOKEN`
+   - `OPENAI_API_KEY`
+4. Click **Deploy**.
+
+**Note:** If you use Secret Manager, make sure the Cloud Run service account has the `Secret Manager Secret Accessor` role.
+
+### Local development
+- For local development, you can still use a `.env` file. The config loader will use it if present.
+- In production (Cloud Run), only environment variables are used for secrets.
+
+---
+
+**This documentation provides a complete overview for developers and maintainers to understand, extend, and operate the Discord Moderation Bot.**
+
+---
+
+## Updating the Bot on Cloud Run
+
+To update the Discord Moderation Bot while it is running in Google Cloud Run, follow these steps:
+
+### 1. Update the Code or Configuration
+- Make your changes to the codebase (e.g. bugfixes, new features, config.json updates).
+- Commit your changes to your version control system (optional but recommended).
+
+### 2. Build and Push a New Docker Image
+```bash
+gcloud builds submit --tag us-docker.pkg.dev/YOUR_PROJECT_ID/gcr.io/discord-bot:latest
+# Example:
+gcloud builds submit --tag us-docker.pkg.dev/discordgpt-459908/gcr.io/discord-bot:latest
+```
+
+### 3. Deploy the New Image to Cloud Run
+```bash
+gcloud run deploy discord-bot \
+  --image us-docker.pkg.dev/discordgpt-459908/gcr.io/discord-bot:latest \
+  --region us-central1 \
+  --min-instances=1 --max-instances=1 --no-cpu-throttling
+```
+
+- The service will automatically restart with the new code.
+- You do **not** need to stop or delete the old service; Cloud Run handles the update seamlessly.
+
+### 4. (Optional) Update Environment Variables or Secrets
+- If you need to change tokens, API keys, or other secrets:
+  1. Go to Google Cloud Console → Cloud Run → Your Service → Edit & Deploy New Revision.
+  2. Update the environment variables or Secret Manager references as needed.
+  3. Click **Deploy**. The service will restart with the new configuration.
+- **You do NOT need to rebuild the Docker image if you only change environment variables or secrets.**
+
+### 5. Check Logs and Status
+- After deployment, check the Cloud Run logs to ensure the bot started successfully and is online in Discord.
+
+--- 
